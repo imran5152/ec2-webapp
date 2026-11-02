@@ -18,4 +18,4 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "index.html"
-          target: "/usr/share/nginx/html/"
+          target: "/usr/share/nginx/html/ec2-webapp/"
