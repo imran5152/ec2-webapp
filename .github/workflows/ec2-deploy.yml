@@ -7,26 +7,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
     steps:
       - name: Deploy to EC2
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" | tr -d '\r' > ~/.ssh/ec2.pem
-          chmod 600 ~/.ssh/ec2.pem
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
-
-          ssh -i ~/.ssh/ec2.pem "ec2-user@$EC2_HOST" 'bash -se' <<'EOF'
-          APP="/home/ec2-user/ec2-webapp"
-          command -v git >/dev/null || sudo dnf install -y git
-          if [ -d "$APP/.git" ]; then
-            cd "$APP"
-            git pull --ff-only origin main
-          else
-            git clone -b main "https://github.com/${{ github.repository }}.git" "$APP"
-          fi
-          sudo cp "$APP/index.html" /usr/share/nginx/html/index.html
-          EOF
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo dnf install -y git
+            rm -rf ~/ec2-webapp
+            git clone https://github.com/${{ github.repository }}.git ~/ec2-webapp
+            sudo cp ~/ec2-webapp/index.html /usr/share/nginx/html/index.htmlgit add .
